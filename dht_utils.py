@@ -13,5 +13,3 @@ def random_id():
     return os.urandom(__node_id_bits__ / 8)
 
 
-
-
