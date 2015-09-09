@@ -5,7 +5,8 @@ def decode(data):
     try:
         value, idx = __decode(data, 0)
         retval = (True, value)
-    except Exception, e:
+    except Exception as e:
+        print e.message
         retval = (False, e.message)
     finally:
         return retval
@@ -66,13 +67,12 @@ def __decode_list(data, start_idx):
     while data[start_idx] != 'e':
         value, start_idx = __decode(data, start_idx)
         values.append(value)
-
     return values, start_idx + 1
 
 
 # 解析字典
 def __decode_dict(data, start_idx):
-    dict_value = {}
+    dict_value = dict()
     while data[start_idx] != 'e':
         key, start_idx = __decode(data, start_idx)
         value, start_idx = __decode(data, start_idx)
