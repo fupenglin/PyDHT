@@ -3,10 +3,10 @@
 
 import socket
 import threading
-import time
 import dht_utils
 import dht_bencode
 import dht_bucket
+import dht_store
 
 
 # DHT网络中的超级节点
@@ -22,6 +22,7 @@ class DHTSpider(threading.Thread):
     def __init__(self, server_id, server_port):
         threading.Thread.__init__(self)
         self.bucket = dht_bucket.DHTBucket()
+        self.store = dht_store.DHTStore(dht_utils.id_to_hex(server_id))
         self.is_working = True
         self.server_id = server_id
         self.server_port = server_port
@@ -41,7 +42,7 @@ class DHTSpider(threading.Thread):
     def start(self):
         self.listen_thread.start()
         self.join_dht()
-        threading.Timer(5, self.send_ping_request).start()
+        threading.Timer(60 * 10, self.send_ping_request).start()
 
     # 爬虫加入dht网络
     def join_dht(self):
@@ -58,7 +59,7 @@ class DHTSpider(threading.Thread):
     def handle_message(self):
         while self.is_working:
             try:
-                #print 'waiting....'
+
                 data, address = self.sock.recvfrom(65536)
                 ok, msg = dht_bencode.decode(data)
                 if not ok:
@@ -67,12 +68,9 @@ class DHTSpider(threading.Thread):
                     self.handle_response(msg, address)
                 elif msg['y'] == 'q':
                     self.handle_request[msg['q']](msg, address)
-                elif msg['y'] == 'e':
-                    print msg['e']
+
             except Exception as e:
-                print 'error:' + e.message
-                print 'msg: ',
-                print msg
+                pass
 
     # 处理find_node请求
     def handle_find_node_request(self, msg, address):
@@ -93,11 +91,10 @@ class DHTSpider(threading.Thread):
 
     # 处理ping请求
     def handle_ping_request(self, msg, address):
-        print 'handle_ping_request'
-        # 更新信息
+
         node = dht_bucket.Node(msg['a']['id'], *address)
         self.bucket.update(node.node_id, node)
-        #  回复对方
+
         data = {
             't': msg['t'],
             'y': 'r',
@@ -109,7 +106,7 @@ class DHTSpider(threading.Thread):
 
     # 处理get_peers请求
     def handle_get_peers_request(self, msg, address):
-        print 'handle_get_peers_request'
+
         print 'info_hash: ' + dht_utils.id_to_hex(msg['a']['info_hash'])
         node = dht_bucket.Node(msg['a']['id'], *address)
         self.bucket.update(node.node_id, node)
@@ -126,7 +123,6 @@ class DHTSpider(threading.Thread):
 
     # 处理announce请求
     def handle_announce_request(self, msg, address):
-        print 'handle_announce_request'
         print 'info_hash: ' + dht_utils.id_to_hex(msg['a']['info_hash'])
         node = dht_bucket.Node(msg['a']['id'], *address)
         self.bucket.update(node.node_id, node)
@@ -144,6 +140,7 @@ class DHTSpider(threading.Thread):
                     continue
                 self.bucket.update(node.node_id, node)
 
+    # 发送find_node请求
     def send_find_node(self, nid, address):
         data = {
             't': dht_utils.random_tranid(),
@@ -155,10 +152,9 @@ class DHTSpider(threading.Thread):
         if ok:
             self.sock.sendto(query_msg, address)
 
+    # 发送ping请求
     def send_ping_request(self):
-        print 'send_ping_request'
         nodes = self.bucket.get_nodes()
-        print len(nodes)
         for node in nodes:
             tran_id = 'query_' + str(self.tran_cnt)
             self.tran_cnt = (self.tran_cnt + 1) % 2000
@@ -177,7 +173,7 @@ class DHTSpider(threading.Thread):
 
 if __name__ == '__main__':
     spiders = []
-    for i in range(0, 9):
+    for i in range(0, 1):
         spider_id = 'abcdefghij012345678' + str(i)
         spider_port = 6881 + i
         spider = DHTSpider(spider_id, spider_port)
