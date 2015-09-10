@@ -15,7 +15,7 @@ class DHTStore(Thread):
     def run(self):
         while self.is_working:
             info_hash = self.queue.get()
-            print info_hash
+            print info_hash.upper()
 
     def save_info_hash(self, info_hash):
         self.queue.put(info_hash)
