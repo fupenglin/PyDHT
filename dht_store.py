@@ -27,7 +27,7 @@ class DHTStore(Thread):
             self.is_working = False
 
     def save_info_hash(self, info_hash):
-        self.queue.put(info_hash)
+        self.queue.put(info_hash.upper())
 
     def stop(self):
         self.is_working = False
