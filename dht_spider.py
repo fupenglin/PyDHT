@@ -47,7 +47,7 @@ class DHTSpider(threading.Thread):
     # 爬虫加入dht网络
     def join_dht(self):
         nodes = self.bucket.get_nodes()
-        if len(nodes) < 500:
+        if len(nodes) < 1000:
             for node in nodes:
                 self.send_find_node(self.server_id, (node.node_ip, node.node_port))
 
@@ -108,7 +108,7 @@ class DHTSpider(threading.Thread):
     def handle_get_peers_request(self, msg, address):
 
         print 'info_hash: ' + dht_utils.id_to_hex(msg['a']['info_hash'])
-        self.store.save_info_hash(msg['a']['info_hash'])
+        self.store.save_info_hash(dht_utils.id_to_hex(msg['a']['info_hash']))
         node = dht_bucket.Node(msg['a']['id'], *address)
         self.bucket.update(node.node_id, node)
 
@@ -170,7 +170,7 @@ class DHTSpider(threading.Thread):
             ok, query_msg = dht_bencode.encode(data)
             if ok:
                 self.sock.sendto(query_msg, (node.node_ip, node.node_port))
-        threading.Timer(60 * 10, self.send_ping_request).start()
+        threading.Timer(60 * 3, self.send_ping_request).start()
         self.bucket.tran_time_out_action()
 
 if __name__ == '__main__':

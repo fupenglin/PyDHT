@@ -49,7 +49,3 @@ def encode_nodes(nodes):
         data += socket.inet_aton(node.node_ip)
         data += struct.pack('!H', node.node_port)
     return data
-
-
-
-print id_to_hex(random_id())

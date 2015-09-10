@@ -9,7 +9,8 @@ class DHTStore:
 
     def save_info_hash(self, info_hash):
         self.info_hash_cnt += 1
-        with open(self.file_name, 'w') as f:
-            f.write(self.info_hash_cnt)
+        with open(self.file_name, 'a') as f:
+            f.write(info_hash)
+            f.close()
 
 
