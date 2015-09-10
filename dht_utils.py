@@ -41,7 +41,6 @@ def encode_nodes(nodes):
     data = ''
     for node in nodes:
         data += node.node_id
-        print node.node_ip
         data += socket.inet_aton(node.node_ip)
         data += struct.pack('!H', node.node_port)
     return data

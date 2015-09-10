@@ -89,7 +89,7 @@ class DHTSpider(threading.Thread):
     def handle_ping_request(self, msg, address):
         print 'handle_ping_request'
         # 更新信息
-        node = dht_bucket.Node(msg['r']['id'], *address)
+        node = dht_bucket.Node(msg['a']['id'], *address)
         self.bucket.update(node.node_id, node)
         #  回复对方
         data = {
@@ -104,7 +104,6 @@ class DHTSpider(threading.Thread):
     # 处理get_peers请求
     def handle_get_peers_request(self, msg, address):
         print 'handle_get_peers_request'
-        print 'info_hash: ' + msg['a']['info_hash']
         nodes = dht_utils.encode_nodes(self.bucket.get_kclose())
         data = {
             't': msg['t'],
@@ -117,7 +116,7 @@ class DHTSpider(threading.Thread):
 
     # 处理announce请求
     def handle_announce_request(self, msg, address):
-        print 'info_hash' + msg['r']['info_hash']
+        print 'info_hash' + msg['a']['info_hash']
 
     # 处理答复消息
     def handle_response(self, msg, address):
