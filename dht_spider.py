@@ -108,7 +108,7 @@ class DHTSpider(threading.Thread):
     # 处理get_peers请求
     def handle_get_peers_request(self, msg, address):
         print 'handle_get_peers_request'
-
+        print 'info_hash: ' + msg['a']['info_hash']
         node = dht_bucket.Node(msg['a']['id'], *address)
         self.bucket.update(node.node_id, node)
 
@@ -125,6 +125,7 @@ class DHTSpider(threading.Thread):
     # 处理announce请求
     def handle_announce_request(self, msg, address):
         print 'handle_announce_request'
+        print 'info_hash: ' + msg['a']['info_hash']
         node = dht_bucket.Node(msg['a']['id'], *address)
         self.bucket.update(node.node_id, node)
 
@@ -169,7 +170,7 @@ class DHTSpider(threading.Thread):
             ok, query_msg = dht_bencode.encode(data)
             if ok:
                 self.sock.sendto(query_msg, (node.node_ip, node.node_port))
-        threading.Timer(60, self.send_ping_request).start()
+        threading.Timer(60 * 10, self.send_ping_request).start()
         self.bucket.tran_time_out_action()
 
 if __name__ == '__main__':

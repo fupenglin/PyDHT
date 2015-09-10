@@ -4,6 +4,7 @@
 import os
 import socket
 import struct
+import binascii
 import dht_bucket
 
 
@@ -21,6 +22,10 @@ def random_id():
 # 随机生成4字节tranid
 def random_tranid():
     return os.urandom(__tran_id_bits__ / 8)
+
+
+def id_to_hex(nid):
+    return binascii.hexlify(nid)
 
 
 # 解析节点地址
@@ -44,3 +49,7 @@ def encode_nodes(nodes):
         data += socket.inet_aton(node.node_ip)
         data += struct.pack('!H', node.node_port)
     return data
+
+
+
+print id_to_hex(random_id())
