@@ -125,10 +125,8 @@ class DHTSpider(threading.Thread):
     # 处理announce请求
     def handle_announce_request(self, msg, address):
         print 'handle_announce_request'
-
         node = dht_bucket.Node(msg['a']['id'], *address)
         self.bucket.update(node.node_id, node)
-        print 'info_hash' + msg['a']['info_hash']
 
     # 处理答复消息
     def handle_response(self, msg, address):
