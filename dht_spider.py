@@ -75,6 +75,10 @@ class DHTSpider(threading.Thread):
     # 处理find_node请求
     def handle_find_node_request(self, msg, address):
         print 'handle_find_node_request'
+
+        node = dht_bucket.Node(msg['a']['id'], *address)
+        self.bucket.update(node.node_id, node)
+
         nodes = dht_utils.encode_nodes(self.bucket.get_kclose())
         data = {
             't': msg['t'],
@@ -104,6 +108,10 @@ class DHTSpider(threading.Thread):
     # 处理get_peers请求
     def handle_get_peers_request(self, msg, address):
         print 'handle_get_peers_request'
+
+        node = dht_bucket.Node(msg['a']['id'], *address)
+        self.bucket.update(node.node_id, node)
+
         nodes = dht_utils.encode_nodes(self.bucket.get_kclose())
         data = {
             't': msg['t'],
@@ -116,6 +124,10 @@ class DHTSpider(threading.Thread):
 
     # 处理announce请求
     def handle_announce_request(self, msg, address):
+        print 'handle_announce_request'
+
+        node = dht_bucket.Node(msg['a']['id'], *address)
+        self.bucket.update(node.node_id, node)
         print 'info_hash' + msg['a']['info_hash']
 
     # 处理答复消息
