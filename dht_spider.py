@@ -28,6 +28,7 @@ class DHTSpider(threading.Thread):
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
         self.sock.bind(('0.0.0.0', server_port))
         self.listen_thread = threading.Thread(target=self.handle_message)
+        self.listen_thread.setDaemon(True)
         self.handle_request = {
             'ping': self.handle_ping_request,
             'find_node': self.handle_get_peers_request,
@@ -61,7 +62,6 @@ class DHTSpider(threading.Thread):
                 data, address = self.sock.recvfrom(65536)
                 ok, msg = dht_bencode.decode(data)
                 if not ok:
-                    print 'decode error'
                     continue
                 if msg['y'] == 'r':
                     self.handle_response(msg, address)
