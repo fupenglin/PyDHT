@@ -31,7 +31,7 @@ class DHTSpider(threading.Thread):
         self.listen_thread.setDaemon(True)
         self.handle_request = {
             'ping': self.handle_ping_request,
-            'find_node': self.handle_get_peers_request,
+            'find_node': self.handle_find_node_request,
             'get_peers': self.handle_get_peers_request,
             'announce_peer': self.handle_announce_request
         }
@@ -71,6 +71,8 @@ class DHTSpider(threading.Thread):
                     print msg['e']
             except Exception as e:
                 print 'error:' + e.message
+                print 'msg: ',
+                print msg
 
     # 处理find_node请求
     def handle_find_node_request(self, msg, address):
@@ -174,7 +176,9 @@ class DHTSpider(threading.Thread):
         self.bucket.tran_time_out_action()
 
 if __name__ == '__main__':
-    spider_id = 'abcdefghij0123456789'
-    spider_port = 6883
-    spider = DHTSpider(spider_id, spider_port)
-    spider.start()
+    spiders = []
+    for i in range(0, 9):
+        spider_id = 'abcdefghij012345678' + str(i)
+        spider_port = 6881 + i
+        spider = DHTSpider(spider_id, spider_port)
+        spider.start()
