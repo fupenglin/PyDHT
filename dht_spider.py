@@ -104,7 +104,7 @@ class DHTSpider(threading.Thread):
     # 处理get_peers请求
     def handle_get_peers_request(self, msg, address):
         print 'handle_get_peers_request'
-        print 'info_hash: ' + msg['r']['info_hash']
+        print 'info_hash: ' + msg['a']['info_hash']
         nodes = dht_utils.encode_nodes(self.bucket.get_kclose())
         data = {
             't': msg['t'],

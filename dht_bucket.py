@@ -44,7 +44,6 @@ class DHTBucket:
 
     def tran_time_out_action(self):
         for node in self.__tran_bucket.values():
-            print 'delete node'
             if self.__bucket.has_key(node.node_id):
                 self.__bucket.pop(node.node_id)
 
