@@ -22,7 +22,7 @@ class DHTSpider(threading.Thread):
     def __init__(self, server_id, server_port):
         threading.Thread.__init__(self)
         self.bucket = dht_bucket.DHTBucket()
-        self.store = dht_store.DHTStore(dht_utils.id_to_hex(server_id))
+        self.store = dht_store.DHTStore()
         self.is_working = True
         self.server_id = server_id
         self.server_port = server_port
@@ -40,6 +40,7 @@ class DHTSpider(threading.Thread):
 
     # 启动DHT爬虫
     def start(self):
+        self.store.start()
         self.listen_thread.start()
         self.join_dht()
         threading.Timer(60 * 10, self.send_ping_request).start()
@@ -106,8 +107,6 @@ class DHTSpider(threading.Thread):
 
     # 处理get_peers请求
     def handle_get_peers_request(self, msg, address):
-
-        print 'info_hash: ' + dht_utils.id_to_hex(msg['a']['info_hash'])
         self.store.save_info_hash(dht_utils.id_to_hex(msg['a']['info_hash']))
         node = dht_bucket.Node(msg['a']['id'], *address)
         self.bucket.update(node.node_id, node)
@@ -124,8 +123,7 @@ class DHTSpider(threading.Thread):
 
     # 处理announce请求
     def handle_announce_request(self, msg, address):
-        print 'info_hash: ' + dht_utils.id_to_hex(msg['a']['info_hash'])
-        self.store.save_info_hash(msg['a']['info_hash'])
+        self.store.save_info_hash(dht_utils.id_to_hex(msg['a']['info_hash']))
         node = dht_bucket.Node(msg['a']['id'], *address)
         self.bucket.update(node.node_id, node)
 
