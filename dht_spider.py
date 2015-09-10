@@ -19,8 +19,6 @@ super_dht_nodes = [
 
 class DHTSpider(threading.Thread):
 
-    is_working = False
-
     def __init__(self, server_id, server_port):
         threading.Thread.__init__(self)
         self.bucket = dht_bucket.DHTBucket()
@@ -36,45 +34,63 @@ class DHTSpider(threading.Thread):
             'get_peers': self.handle_get_peers_request,
             'announce_peer': self.handle_announce_request
         }
+        self.tran_cnt = 0
 
+    # 启动DHT爬虫
     def start(self):
         self.listen_thread.start()
         self.join_dht()
+        threading.Timer(5, self.send_ping_request).start()
 
+    # 爬虫加入dht网络
     def join_dht(self):
-        for address in super_dht_nodes:
-            self.process_find_node(dht_utils.random_id(), address)
+        nodes = self.bucket.get_nodes()
+        if len(nodes) < 500:
+            for node in nodes:
+                self.send_find_node(self.server_id, (node.node_ip, node.node_port))
 
+            for address in super_dht_nodes:
+                self.send_find_node(self.server_id, address)
+        threading.Timer(30, self.join_dht).start()
 
     # 处理接收到的消息
     def handle_message(self):
         while self.is_working:
             try:
-                print 'waiting....'
+                #print 'waiting....'
                 data, address = self.sock.recvfrom(65536)
                 ok, msg = dht_bencode.decode(data)
                 if not ok:
+                    print 'decode error'
                     continue
                 if msg['y'] == 'r':
                     self.handle_response(msg, address)
                 elif msg['y'] == 'q':
                     self.handle_request[msg['q']](msg, address)
-                else:
-                    pass
+                elif msg['y'] == 'e':
+                    print msg['e']
             except Exception as e:
-                print 'error' + e.message
-                pass
+                print 'error:' + e.message
 
     # 处理find_node请求
     def handle_find_node_request(self, msg, address):
         print 'handle_find_node_request'
-        pass
+        nodes = dht_utils.encode_nodes(self.bucket.get_kclose())
+        data = {
+            't': msg['t'],
+            'y': 'r',
+            'r': {'id': self.server_id, 'nodes': nodes}
+        }
+        ok, reply_msg = dht_bencode.encode(data)
+        if ok:
+            self.sock.sendto(reply_msg, address)
 
     # 处理ping请求
     def handle_ping_request(self, msg, address):
         print 'handle_ping_request'
         # 更新信息
-
+        node = dht_bucket.Node(msg['r']['id'], *address)
+        self.bucket.update(node.node_id, node)
         #  回复对方
         data = {
             't': msg['t'],
@@ -88,26 +104,37 @@ class DHTSpider(threading.Thread):
     # 处理get_peers请求
     def handle_get_peers_request(self, msg, address):
         print 'handle_get_peers_request'
-        pass
+        print 'info_hash: ' + msg['r']['info_hash']
+        nodes = dht_utils.encode_nodes(self.bucket.get_kclose())
+        data = {
+            't': msg['t'],
+            'y': 'r',
+            'r': {'id': self.server_id, 'token': dht_utils.random_tranid(), 'nodes': nodes}
+        }
+        ok, reply_msg = dht_bencode.encode(data)
+        if ok:
+            self.sock.sendto(reply_msg, address)
 
     # 处理announce请求
     def handle_announce_request(self, msg, address):
-        print 'handle_announce_request'
-        pass
+        print 'info_hash' + msg['r']['info_hash']
 
     # 处理答复消息
     def handle_response(self, msg, address):
-        print 'handle_response'
+        #print 'handle_response'
+        self.bucket.pop_tran(msg['t'])
         nid = msg['r']['id']
-        self.bucket.update(nid, address)
-        nodes = dht_utils.decode_nodes(msg['r']['nodes'])
-        for (nid, ip, port) in nodes:
-            self.bucket.update(nid, (ip, port))
-        pass
+        self.bucket.update(nid, dht_bucket.Node(nid, *address))
+        if msg['r'].has_key('nodes'):
+            nodes = dht_utils.decode_nodes(msg['r']['nodes'])
+            for node in nodes:
+                if node.node_id == self.server_id:
+                    continue
+                self.bucket.update(node.node_id, node)
 
-    def process_find_node(self, nid, address):
+    def send_find_node(self, nid, address):
         data = {
-            't': 'aa',
+            't': dht_utils.random_tranid(),
             'y': 'q',
             'q': 'find_node',
             'a': {'id': self.server_id, 'target': nid}
@@ -115,14 +142,29 @@ class DHTSpider(threading.Thread):
         ok, query_msg = dht_bencode.encode(data)
         if ok:
             self.sock.sendto(query_msg, address)
-            print 'sendto: ' + query_msg
 
+    def send_ping_request(self):
+        print 'send_ping_request'
+        nodes = self.bucket.get_nodes()
+        print len(nodes)
+        for node in nodes:
+            tran_id = 'query_' + str(self.tran_cnt)
+            self.tran_cnt = (self.tran_cnt + 1) % 2000
+            self.bucket.add_tran(tran_id, node)
+            data = {
+                't': tran_id,
+                'y': 'q',
+                'q': 'ping',
+                'a': {'id': self.server_id}
+            }
+            ok, query_msg = dht_bencode.encode(data)
+            if ok:
+                self.sock.sendto(query_msg, (node.node_ip, node.node_port))
+        threading.Timer(60, self.send_ping_request).start()
+        self.bucket.tran_time_out_action()
 
 if __name__ == '__main__':
-    spider_id = dht_utils.random_id()
+    spider_id = 'abcdefghij0123456789'
     spider_port = 6883
     spider = DHTSpider(spider_id, spider_port)
     spider.start()
-    time.sleep(10)
-    print spider.bucket.bucket
-    print len(spider.bucket.bucket.items())

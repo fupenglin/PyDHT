@@ -91,7 +91,6 @@ def __encode(data):
     elif isinstance(data, list):
         value = __encode_list(data)
     else:
-        print data
         raise Exception('__encode: Error')
     return value
 
