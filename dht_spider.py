@@ -168,7 +168,7 @@ class DHTSpider(threading.Thread):
         nodes = self.bucket.get_nodes()
         for node in nodes:
             tran_id = 'query_' + str(self.tran_cnt)
-            self.tran_cnt = (self.tran_cnt + 1) % 2000
+            self.tran_cnt = (self.tran_cnt + 1) % 20000
             self.bucket.add_tran(tran_id, node)
             data = {
                 't': tran_id,
