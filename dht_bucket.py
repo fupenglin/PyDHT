@@ -20,7 +20,7 @@ class DHTBucket:
         self.__tran_bucket = {}
 
     def update(self, node_id, node):
-        if len(self.__bucket.keys()) <= 2000:
+        if len(self.__bucket.keys()) <= 5000:
             self.__bucket[node_id] = node
 
     def delete(self, node_id):

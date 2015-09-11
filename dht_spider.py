@@ -18,7 +18,7 @@ class DHTSpider(threading.Thread):
 
     def __init__(self, server_id, server_port):
         threading.Thread.__init__(self)
-        self.daemon = True
+        self.setDaemon(True)
         self.is_working = True
 
         self.bucket = dht_bucket.DHTBucket()

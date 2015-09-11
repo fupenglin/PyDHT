@@ -34,6 +34,7 @@ class DHTStore(threading.Thread):
                                 (info.info_hash, info.from_ip, info.catch_time))
                 size -= 1
             self.db.commit()
+        self.db.close()
 
     # 保存获取到的资源信息
     def save(self, info):
