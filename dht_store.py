@@ -32,7 +32,6 @@ class DHTStore(threading.Thread):
                 info = self.queue.get()
                 self.db.execute("insert into table_info (info_hash, from_ip, catch_time) values (?, ?, ?)",
                                 (info.info_hash, info.from_ip, info.catch_time))
-                print 'insert'
                 size -= 1
             self.db.commit()
 
