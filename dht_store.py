@@ -20,6 +20,7 @@ class DHTStore(threading.Thread):
             while size > 0:
                 info_hash = self.queue.get()
                 self.db.execute("insert into table_info (info_hash) values (?)", [info_hash])
+                size -= 1
             self.db.commit()
 
     def save_info_hash(self, info_hash):
