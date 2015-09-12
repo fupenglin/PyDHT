@@ -8,6 +8,7 @@ import dht_utils
 import dht_bencode
 import dht_bucket
 import dht_store
+import dht_torrent
 
 
 # DHT网络中的超级节点
@@ -23,6 +24,7 @@ class DHTSpider(threading.Thread):
 
         self.bucket = dht_bucket.DHTBucket()
         self.store = dht_store.DHTStore()
+        self.torrent = dht_torrent.DHTTorrent()
 
         self.server_id = server_id
         self.server_port = server_port
@@ -41,6 +43,7 @@ class DHTSpider(threading.Thread):
     def start_dht(self):
         self.start()
         self.store.start()
+        self.torrent.start()
         self.__join_dht()
         threading.Timer(60 * 10, self.__send_ping_request).start()
 
@@ -127,8 +130,15 @@ class DHTSpider(threading.Thread):
     # 处理announce请求
     def __handle_announce_request(self, msg, address):
 
-        info = dht_store.SRC_INFO(dht_utils.id_to_hex(msg['a']['info_hash']), address[0], int(time.time()))
+        if msg['a'].has_key('implied_port') and msg['a']['implied_port'] != 0:
+            port = address[1]
+        else:
+            port = msg['a']['port']
+
+        info = dht_store.SRC_INFO(dht_utils.id_to_hex(msg['a']['info_hash']), address[0] + ':' + address[1], int(time.time()))
         self.store.save(info)
+
+        self.torrent.get_torrent(msg['a']['info_hash'], (address[0], port))
 
         node = dht_bucket.Node(msg['a']['id'], *address)
         self.bucket.update(node.node_id, node)
@@ -189,8 +199,8 @@ class DHTSpider(threading.Thread):
 
 if __name__ == '__main__':
     spiders = []
-    for i in range(0, 1):
-        spider_id = 'abcdefghij012345678' + str(i)
+    for i in range(0, 9):
+        spider_id = '1bcdefghij012345678' + str(i)
         spider_port = 6881 + i
         spider = DHTSpider(spider_id, spider_port)
         spider.start_dht()
