@@ -4,12 +4,13 @@
 import threading
 import Queue
 import socket
+import struct
 import dht_utils
 import binascii
 import dht_bencode
 
 
-BTPROTOCOL = 'BitTorrent protocol'
+BT_PROTOCOL = 'BitTorrent protocol'
 
 
 class DHTTorrent(threading.Thread):
@@ -54,22 +55,22 @@ class DHTTorrent(threading.Thread):
 
     def send_handshake_info(self, sock, info_hash):
         pstr_len = 19
-        pstr = BTPROTOCOL
+        pstr = BT_PROTOCOL
         reserved = '\x00\x00\x00\x00\x00\x00\x00\x00'
         peer_id = dht_utils.random_id()
         data = chr(pstr_len) + pstr + reserved + info_hash + peer_id
-        sock.send(data)
+        self.__send_msg(sock, data)
 
     def check_handshake_info(self, data, real_info_hah):
 
         pstr_len, data = ord(data[:1]), data[1:]
         print pstr_len
-        if pstr_len != len(BTPROTOCOL):
+        if pstr_len != len(BT_PROTOCOL):
             return False
 
         pstr, data = data[:pstr_len], data[pstr_len:]
         print pstr
-        if pstr != BTPROTOCOL:
+        if pstr != BT_PROTOCOL:
             return False
 
         info_hash = data[8:28]
@@ -79,8 +80,12 @@ class DHTTorrent(threading.Thread):
         return True
 
     def send_extend_handshake_info(self, sock):
-        len = 1
-        mid = 0
-        data = chr(20) + chr(mid) + dht_bencode.encode({"m":{"ut_metadata": 1}})[1]
-        print data
-        sock.send(data)
+        data = chr(20) + chr(0) + dht_bencode.encode({"m":{"ut_metadata": 1}})[1]
+        self.__send_msg(sock, data)
+
+    def __send_msg(self, sock, data):
+        msg = struct.pack('>I', len(data)) + data
+        sock.send(msg)
+
+if __name__ == '__main__':
+    print len(chr(19))

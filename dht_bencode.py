@@ -6,7 +6,6 @@ def decode(data):
         value, idx = __decode(data, 0)
         retval = (True, value)
     except Exception as e:
-        print e.message
         retval = (False, e.message)
     finally:
         return retval

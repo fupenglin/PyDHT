@@ -49,5 +49,3 @@ class DHTBucket:
 
     def tran_timer_start(self):
         Timer(10, self.tran_time_out_action).start()
-
-

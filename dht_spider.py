@@ -9,6 +9,7 @@ import dht_bencode
 import dht_bucket
 import dht_store
 import dht_torrent
+import dht_config
 
 
 # DHT网络中的超级节点
@@ -123,19 +124,17 @@ class DHTSpider(threading.Thread):
             'y': 'r',
             'r': {'id': self.server_id, 'token': dht_utils.random_tranid(), 'nodes': nodes}
         }
-        ok, reply_msg = dht_bencode.encode(data)
-        if ok:
-            self.sock.sendto(reply_msg, address)
+        self.__send_message(data, address)
 
     # 处理announce请求
     def __handle_announce_request(self, msg, address):
 
-        if msg['a'].has_key('implied_port') and msg['a']['implied_port'] != 0:
+        if 'implied_port' in msg['a'].keys() and msg['a']['implied_port'] != 0:
             port = address[1]
         else:
             port = msg['a']['port']
 
-        info = dht_store.SRC_INFO(dht_utils.id_to_hex(msg['a']['info_hash']), address[0] + ':' + address[1], int(time.time()))
+        info = dht_store.SRC_INFO(dht_utils.id_to_hex(msg['a']['info_hash']), address[0] + ':' + str(port), int(time.time()))
         self.store.save(info)
 
         self.torrent.get_torrent(msg['a']['info_hash'], (address[0], port))
@@ -198,9 +197,8 @@ class DHTSpider(threading.Thread):
 
 
 if __name__ == '__main__':
-    spiders = []
-    for i in range(0, 9):
-        spider_id = '1bcdefghij012345678' + str(i)
-        spider_port = 6881 + i
-        spider = DHTSpider(spider_id, spider_port)
-        spider.start_dht()
+    cf = dht_config.SpiderConfig()
+    spider_id, spider_ip, spider_port = cf.get_spider(0)
+    spider = DHTSpider(spider_id, spider_port)
+    spider.start_dht()
+
