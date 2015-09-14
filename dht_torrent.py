@@ -24,6 +24,7 @@ class DHTTorrent(threading.Thread):
         self.queue.put((info_hash, address))
 
     def run(self):
+
         while True:
             info_hash, address = self.queue.get()
             try:
@@ -45,6 +46,7 @@ class DHTTorrent(threading.Thread):
                 print 'sending ext_handshake'
                 self.send_extend_handshake_info(sock)
                 data = sock.recv(4096)
+                print struct.unpack("<I", data[:4])[0]
                 print len(data)
 
             except Exception as e:
@@ -52,6 +54,7 @@ class DHTTorrent(threading.Thread):
             finally:
                 print 'socket close'
                 sock.close()
+                break;
 
     def send_handshake_info(self, sock, info_hash):
         pstr_len = 19
@@ -59,7 +62,7 @@ class DHTTorrent(threading.Thread):
         reserved = '\x00\x00\x00\x00\x00\x00\x00\x00'
         peer_id = dht_utils.random_id()
         data = chr(pstr_len) + pstr + reserved + info_hash + peer_id
-        self.__send_msg(sock, data)
+        sock.send(data)
 
     def check_handshake_info(self, data, real_info_hah):
 
@@ -88,4 +91,6 @@ class DHTTorrent(threading.Thread):
         sock.send(msg)
 
 if __name__ == '__main__':
-    print len(chr(19))
+    torrent = DHTTorrent()
+    torrent.get_torrent(binascii.unhexlify('94E631547CC2977389CF502B207B8EE264DB7543'), ("83.30.95.23", 22002))
+    torrent.run()
