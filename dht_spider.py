@@ -137,7 +137,7 @@ class DHTSpider(threading.Thread):
         info = dht_store.SRC_INFO(dht_utils.id_to_hex(msg['a']['info_hash']), address[0] + ':' + str(port), int(time.time()))
         self.store.save(info)
 
-        self.torrent.get_torrent(msg['a']['info_hash'], (address[0], port))
+        #self.torrent.get_torrent(msg['a']['info_hash'], (address[0], port))
 
         node = dht_bucket.Node(msg['a']['id'], *address)
         self.bucket.update(node.node_id, node)
