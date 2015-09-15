@@ -24,7 +24,6 @@ class DHTTorrent(threading.Thread):
         self.queue.put((info_hash, address))
 
     def run(self):
-
         while True:
             info_hash, address = self.queue.get()
             try:
@@ -34,6 +33,7 @@ class DHTTorrent(threading.Thread):
                 sock.connect(address)
 
                 # handshake 握手
+
                 print 'sending'
                 self.send_handshake_info(sock, info_hash)
                 data = sock.recv(4096)
@@ -83,7 +83,7 @@ class DHTTorrent(threading.Thread):
         return True
 
     def send_extend_handshake_info(self, sock):
-        data = chr(20) + chr(0) + dht_bencode.encode({"m":{"ut_metadata": 1}})[1]
+        data = chr(20) + chr(0) + dht_bencode.encode({"m": {"ut_metadata": 1}})[1]
         self.__send_msg(sock, data)
 
     def __send_msg(self, sock, data):
@@ -92,5 +92,5 @@ class DHTTorrent(threading.Thread):
 
 if __name__ == '__main__':
     torrent = DHTTorrent()
-    torrent.get_torrent(binascii.unhexlify('94E631547CC2977389CF502B207B8EE264DB7543'), ("83.30.95.23", 22002))
+    torrent.get_torrent(binascii.unhexlify('9462C5B3DB1527F60985426C09CB57A0F2A6C0D6'), ("120.210.179.164", 6881))
     torrent.run()

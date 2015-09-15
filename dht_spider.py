@@ -110,7 +110,7 @@ class DHTSpider(threading.Thread):
     # 处理get_peers请求
     def __handle_get_peers_request(self, msg, address):
         # 接收到查询某个资源的请求，说明网络上可能存在该资源，因此保存该资源信息
-        info = dht_store.SRC_INFO(dht_utils.id_to_hex(msg['a']['info_hash']), address[0], int(time.time()))
+        info = dht_store.SRC_INFO(dht_utils.id_to_hex(msg['a']['info_hash']), address[0], address[1], 0, int(time.time()))
         self.store.save(info)
 
         # 更新或保存发送请求的节点信息
@@ -134,10 +134,8 @@ class DHTSpider(threading.Thread):
         else:
             port = msg['a']['port']
 
-        info = dht_store.SRC_INFO(dht_utils.id_to_hex(msg['a']['info_hash']), address[0] + ':' + str(port), int(time.time()))
+        info = dht_store.SRC_INFO(dht_utils.id_to_hex(msg['a']['info_hash']), address[0], port, 1, int(time.time()))
         self.store.save(info)
-
-        #self.torrent.get_torrent(msg['a']['info_hash'], (address[0], port))
 
         node = dht_bucket.Node(msg['a']['id'], *address)
         self.bucket.update(node.node_id, node)
@@ -192,8 +190,12 @@ class DHTSpider(threading.Thread):
     # 向网络节点发送消息
     def __send_message(self, data, address):
         ok, query_msg = dht_bencode.encode(data)
-        if ok:
+        if not ok:
+            return
+        try:
             self.sock.sendto(query_msg, address)
+        except Exception:
+            pass
 
 
 if __name__ == '__main__':
