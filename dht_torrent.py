@@ -29,24 +29,19 @@ class DHTTorrent(threading.Thread):
             try:
                 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                 print 'created'
-                sock.settimeout(10)
+                sock.settimeout(30)
                 sock.connect(address)
 
                 # handshake 握手
-
                 print 'sending'
-                self.send_handshake_info(sock, info_hash)
-                data = sock.recv(4096)
-                print data
-                if not self.check_handshake_info(data, info_hash):
-                    print 'not ok'
+                if not self.send_handshake_info(sock, info_hash):
                     continue
 
                 # ext_handshake
                 print 'sending ext_handshake'
                 self.send_extend_handshake_info(sock)
                 data = sock.recv(4096)
-                print struct.unpack("<I", data[:4])[0]
+                print data
                 print len(data)
 
             except Exception as e:
@@ -63,6 +58,9 @@ class DHTTorrent(threading.Thread):
         peer_id = dht_utils.random_id()
         data = chr(pstr_len) + pstr + reserved + info_hash + peer_id
         sock.send(data)
+
+        data = sock.recv(4096)
+        return self.check_handshake_info(data, info_hash)
 
     def check_handshake_info(self, data, real_info_hah):
 
@@ -83,7 +81,7 @@ class DHTTorrent(threading.Thread):
         return True
 
     def send_extend_handshake_info(self, sock):
-        data = chr(20) + chr(0) + dht_bencode.encode({"m": {"ut_metadata": 1}})[1]
+        data = chr(20) + chr(0)  + dht_bencode.encode({"m": {"ut_metadata": 1}})[1]
         self.__send_msg(sock, data)
 
     def __send_msg(self, sock, data):
@@ -92,5 +90,5 @@ class DHTTorrent(threading.Thread):
 
 if __name__ == '__main__':
     torrent = DHTTorrent()
-    torrent.get_torrent(binascii.unhexlify('9462C5B3DB1527F60985426C09CB57A0F2A6C0D6'), ("120.210.179.164", 6881))
+    torrent.get_torrent(binascii.unhexlify('948D96FB50B7C4227B7E540AE6F06AA01920F978'), ("119.251.53.30", 13382))
     torrent.run()
