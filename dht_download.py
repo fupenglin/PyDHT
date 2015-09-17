@@ -20,17 +20,15 @@ class DHTDownload:
             print i
             try:
                 info_hash = i[0]
-                url = "https://zoink.it/torrent/%s.torrent" % info_hash.upper()
+                url = "http://bt.box.n0808.com/%s/%s/%s.torrent" % (info_hash[:2], info_hash[38:], info_hash)
                 torrent = urllib2.urlopen(url, timeout=30)
-                buffer = io.BytesIO(torrent.read())
-                gz = gzip.GzipFile(fileobj=buffer)
-                raw_data=gz.read()
-                self.save(".\\torrents\\"+info_hash+".torrent", raw_data)
+                raw_data = torrent.read()
+                self.save('torrents/' + info_hash + ".torrent", raw_data)
             except Exception as e:
-                print e.message
+                print 'error'
         self.db.close()
 
-    def save(filename, content):
+    def save(self, filename, content):
 
         try:
             file = open(filename, 'wb')
