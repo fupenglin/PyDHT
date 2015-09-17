@@ -3,8 +3,8 @@
 
 import threading
 import Queue
-import sqlite3
-import time
+import MySQLdb
+
 
 
 # 资源对象类
@@ -26,20 +26,25 @@ class DHTStore(threading.Thread):
         self.queue = Queue.Queue()
         self.is_working = True
         self.info_hash_cnt = 0;
+        try:
+            self.conn = MySQLdb.connect(host='localhost', user='root', passwd='root', db='dht', port=3306)
+            self.cur = self.conn.cursor()
+        except MySQLdb.Error as e:
+            pass
 
     def run(self):
-        self.db = sqlite3.connect('dht.db')
         while self.is_working:
             size = self.queue.qsize()
+            if self.is_working:
+                break;
             while size > 0:
-                info = self.queue.get()
-                self.db.execute("insert into table_info (info_hash, from_ip, from_port, from_type, catch_time) values (?, ?, ?, ?, ?)",
-                                (info.info_hash, info.from_ip, info.from_port, info.from_type, info.catch_time))
+                src = self.queue.get()
+                self.cur.execute('insert ignore into dht_info(info_hash) values(%s)', src.info_hash)
                 size -= 1
                 self.info_hash_cnt += 1
-            self.db.commit()
-        self.db.close()
-
+            self.conn.commit()
+        self.cur.close()
+        self.conn.close()
 
     # 保存获取到的资源信息
     def save(self, info):
@@ -48,3 +53,5 @@ class DHTStore(threading.Thread):
     # 停止当前任务
     def stop(self):
         self.is_working = False
+        self.save(None)
+

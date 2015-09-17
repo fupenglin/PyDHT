@@ -5,6 +5,7 @@ import threading
 import Queue
 import socket
 import struct
+import urllib2
 import dht_utils
 import binascii
 import dht_bencode
@@ -81,14 +82,20 @@ class DHTTorrent(threading.Thread):
         return True
 
     def send_extend_handshake_info(self, sock):
-        data = chr(20) + chr(0)  + dht_bencode.encode({"m": {"ut_metadata": 1}})[1]
+        data = chr(20) + chr(0)  + dht_bencode.encode({"m": {"ut_metadata": 3}})[1]
         self.__send_msg(sock, data)
 
     def __send_msg(self, sock, data):
         msg = struct.pack('>I', len(data)) + data
         sock.send(msg)
 
+
+    def __get_from_torrent_web(self, info_hash):
+        #url =
+        response = urllib2.urlopen('')
+
+
 if __name__ == '__main__':
     torrent = DHTTorrent()
-    torrent.get_torrent(binascii.unhexlify('948D96FB50B7C4227B7E540AE6F06AA01920F978'), ("119.251.53.30", 13382))
+    torrent.get_torrent(binascii.unhexlify('94F3A52B5012AFA8B1D866C0A248EE1FCCA0B522'), ("61.51.194.33", 9697))
     torrent.run()
