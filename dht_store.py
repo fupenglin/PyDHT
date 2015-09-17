@@ -35,7 +35,7 @@ class DHTStore(threading.Thread):
     def run(self):
         while self.is_working:
             size = self.queue.qsize()
-            if self.is_working:
+            if not self.is_working:
                 break;
             while size > 0:
                 src = self.queue.get()
