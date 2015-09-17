@@ -1,42 +1,41 @@
 # -*- coding:utf-8 -*-
 
 
-import urllib
 import urllib2
-import sqlite3
-import io
-import gzip
+import MySQLdb
+import dht_bencode
 
 
 class DHTDownload:
 
     def __init__(self):
-        self.db = sqlite3.connect('dht.db')
-        self.cur = self.db.cursor()
-        pass
+        self.conn = MySQLdb.connect(host='123.56.126.47', user='root', passwd='root', db='dht', port=3306, charset='UTF8')
+        self.cur = self.conn.cursor()
 
     def test(self):
-        for i in self.cur.execute('select info_hash from table_info'):
-            print i
+        self.cur.execute('select * from dht_info')
+        for info in self.cur.fetchall():
             try:
-                info_hash = i[0]
+                if info[1]:
+                    t = info[1].decode('utf-8')
+                    continue
+                info_hash = '94F3A52B5012AFA8B1D866C0A248EE1FCCA0B522'
                 url = "http://bt.box.n0808.com/%s/%s/%s.torrent" % (info_hash[:2], info_hash[38:], info_hash)
-                torrent = urllib2.urlopen(url, timeout=30)
+                torrent = urllib2.urlopen(url, timeout=10)
                 raw_data = torrent.read()
-                self.save('torrents/' + info_hash + ".torrent", raw_data)
+                self.save(info_hash, raw_data)
             except Exception as e:
                 print 'error'
-        self.db.close()
+        self.cur.close()
+        self.conn.close()
 
-    def save(self, filename, content):
-
-        try:
-            file = open(filename, 'wb')
-            file.write(content)
-            file.close()
-        except IOError,e:
-            print e
-
+    def save(self, info_hash, content):
+        ok, msg = dht_bencode.decode(content)
+        if not ok:
+            return
+        info = msg['info']['name']
+        sql = "update dht_info set dht_info.detail_info='%s' where dht_info.info_hash='%s'" % (info, info_hash)
+        self.cur.execute(sql)
 
 
 if __name__ == '__main__':

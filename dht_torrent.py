@@ -97,5 +97,8 @@ class DHTTorrent(threading.Thread):
 
 if __name__ == '__main__':
     torrent = DHTTorrent()
+
+
+
     torrent.get_torrent(binascii.unhexlify('94F3A52B5012AFA8B1D866C0A248EE1FCCA0B522'), ("61.51.194.33", 9697))
     torrent.run()

@@ -27,7 +27,7 @@ class DHTStore(threading.Thread):
         self.is_working = True
         self.info_hash_cnt = 0;
         try:
-            self.conn = MySQLdb.connect(host='localhost', user='root', passwd='root', db='dht', port=3306)
+            self.conn = MySQLdb.connect(host='localhost', user='root', passwd='root', db='dht', port=3306, charset='UTF8')
             self.cur = self.conn.cursor()
         except MySQLdb.Error as e:
             pass
